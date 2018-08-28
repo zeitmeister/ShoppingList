@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ShoppingList2</string>
+    <string name="action_settings">Settings</string>
+    <string name="bought_switch_text">Köpt?</string>
+    <string name="menu_text">Ta bort alla köpta varor</string>
+    <string name="input_hint">Skriv din vara</string>
+</resources>
