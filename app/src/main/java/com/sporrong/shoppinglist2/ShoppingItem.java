@@ -16,9 +16,10 @@ public class ShoppingItem {
 
     }
 
-    public ShoppingItem(String productName, boolean bought){
+    public ShoppingItem(String productName, boolean bought, int price){
         this.bought = bought;
         this.productName = productName;
+        this.price = price;
     }
 
 

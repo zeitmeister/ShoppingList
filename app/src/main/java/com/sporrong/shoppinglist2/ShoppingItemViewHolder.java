@@ -3,6 +3,8 @@ package com.sporrong.shoppinglist2;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -11,6 +13,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,7 +32,8 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
     private final Button removeButton;
     private final EditText priceTag;
     private int priceInt;
-    private TotalSum totalSumObj;
+    private TotalSum totalSumObj = new TotalSum();
+    private Context context;
     public static final String ITEMS_FIREBASE_KEY = "ItemsList";
     DatabaseReference ref = FirebaseDatabase.getInstance().getReference(ITEMS_FIREBASE_KEY);
 
@@ -40,12 +44,13 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
         boughtSwitch = view.findViewById(R.id.boughtSwitchId);
         removeButton = view.findViewById(R.id.removeButton);
         priceTag = view.findViewById(R.id.priceEditText);
-        totalSumObj = new TotalSum();
+        context = view.getContext();
 
     }
 
     public void bind(final ShoppingItem shoppingItem){
         productName.setText(shoppingItem.productName);
+
 
 
         boughtSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -70,10 +75,44 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
         removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                totalSumObj.drawFromTotalSum(shoppingItem.getPrice());
                 ref.child(shoppingItem.pushKey).removeValue();
+                totalSumObj.drawFromTotalSum(shoppingItem.getPrice());
             }
         });
+
+        priceTag.setText(String.valueOf(shoppingItem.getPrice()));
+
+//        priceTag.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//                Toast.makeText(context, "beforetextchanged"  + s.toString(), Toast.LENGTH_SHORT).show();
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+////                try {
+////                    int number = Integer.parseInt(s.toString());
+////                    ref.child(shoppingItem.pushKey).child("price").setValue(number);
+////                    shoppingItem.setPrice(number);
+//                    Toast.makeText(context, "ontextchange"  + s.toString(), Toast.LENGTH_SHORT).show();
+////                } catch (NumberFormatException e) {}
+//            }
+//
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                try {
+//                    if (priceTag.getText().hashCode() == s.hashCode()) {
+//                        Toast.makeText(context, "aftertextchanged" + s.toString(), Toast.LENGTH_SHORT).show();
+//                        int number = Integer.parseInt(s.toString());
+//                        ref.child(shoppingItem.pushKey).child("price").setValue(number);
+//                        shoppingItem.setPrice(number);
+//
+//                        totalSumObj.addTototalSum(number);
+//                    }
+//                } catch (NumberFormatException e) {}
+//            }
+//        });
 
 
         priceTag.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -99,7 +138,6 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
             }
         });
 
-        priceTag.setText(String.valueOf(shoppingItem.getPrice()));
 
 
 

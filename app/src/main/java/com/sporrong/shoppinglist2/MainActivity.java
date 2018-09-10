@@ -1,6 +1,7 @@
 package com.sporrong.shoppinglist2;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +11,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -73,18 +76,6 @@ public class MainActivity extends AppCompatActivity{
         totalSumTextView = findViewById(R.id.totalSumTextView);
 
 
-        FloatingActionButton fab =  findViewById(R.id.fab);
-        fab.setVisibility(View.INVISIBLE);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                       // .setAction("Action", null).show();
-                pushToFirebase();
-
-            }
-        });
-
         itemEntry.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -118,7 +109,6 @@ public class MainActivity extends AppCompatActivity{
             @Override
             protected void onBindViewHolder(@NonNull ShoppingItemViewHolder holder, int position, @NonNull ShoppingItem model) {
                 holder.bind(model);
-
             }
         };
         totalSumTextView.setText(String.valueOf(TotalSum.getTotalSum()));
@@ -180,13 +170,18 @@ public class MainActivity extends AppCompatActivity{
             return true;
         }
 
+        if (id == R.id.startMeetingButton) {
+            Intent intent = new Intent(this, MeetingPoints.class);
+            startActivity(intent);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
     private void pushToFirebase() {
         String item = itemEntry.getText().toString();
         boolean bought = false;
-        ShoppingItem shoppingItem = new ShoppingItem(item, bought);
+        ShoppingItem shoppingItem = new ShoppingItem(item, bought, 0);
         shoppingItem.pushKey = ref.push().getKey();
         ref.child(shoppingItem.pushKey).setValue(shoppingItem);
         itemEntry.setText("");

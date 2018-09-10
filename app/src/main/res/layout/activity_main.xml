@@ -8,9 +8,8 @@
     tools:context=".MainActivity">
 
     <android.support.v7.widget.RecyclerView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-</android.support.v7.widget.RecyclerView>
+        android:layout_width="185dp"
+        android:layout_height="384dp"></android.support.v7.widget.RecyclerView>
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -60,16 +59,5 @@
 
     </include>
 
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_dialog_email" />
 
 </android.support.constraint.ConstraintLayout>

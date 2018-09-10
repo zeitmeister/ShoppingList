@@ -4,4 +4,5 @@
     <string name="bought_switch_text">Köpt?</string>
     <string name="menu_text">Ta bort alla köpta varor</string>
     <string name="input_hint">Skriv din vara</string>
+    <string name="meetingButtonText">Gå till familjemöte</string>
 </resources>
