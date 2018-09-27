@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.sporrong.shoppinglist2.MainActivity">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/remove_bought_button"
         android:orderInCategory="101"
         android:title="@string/menu_text"
         app:showAsAction="never" />
