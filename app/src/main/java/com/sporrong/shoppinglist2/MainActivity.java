@@ -3,6 +3,7 @@ package com.sporrong.shoppinglist2;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -46,6 +47,7 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity{
+    boolean removed = false;
 
     private ArrayList<ShoppingItem> shoppingItems = new ArrayList<>();
     public static final String ITEMS_FIREBASE_KEY = "ItemsList";
@@ -164,9 +166,11 @@ public class MainActivity extends AppCompatActivity{
 
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.remove_bought_button) {
 
-            removeItemsFromFirebase();
+            if (!removeItemsFromFirebase()) {
+                Toast.makeText(getApplicationContext(),"No bought items to remove",Toast.LENGTH_LONG).show();
+            }
             return true;
         }
 
@@ -194,26 +198,26 @@ public class MainActivity extends AppCompatActivity{
         itemList.scrollToPosition(mostRecentMessageIndex);
     }
 
-    private void removeItemsFromFirebase() {
-
+    private boolean removeItemsFromFirebase() {
       DatabaseReference queryRef = FirebaseDatabase.getInstance().getReference(ITEMS_FIREBASE_KEY);
-//      queryRef.removeValue();
-      Query boughyQuery = queryRef.orderByChild("bought").equalTo("true");
-
+      Query boughyQuery = queryRef.orderByChild("bought").equalTo(true);
 
         boughyQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot querySnap : dataSnapshot.getChildren()){
                     querySnap.getRef().removeValue();
+                    if (querySnap.exists()) {
+                        
+                    }
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
+        return removed;
     }
 
 
