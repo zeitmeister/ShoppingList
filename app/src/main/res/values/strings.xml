@@ -5,4 +5,10 @@
     <string name="menu_text">Ta bort alla köpta varor</string>
     <string name="input_hint">Skriv din vara</string>
     <string name="meetingButtonText">Gå till familjemöte</string>
+    <string name="startMainString">Gå till Inköpslistan</string>
+    <string name="emailText">Enter Email</string>
+    <string name="passwordText">Enter Password</string>
+    <string name="email_reg_text">Enter Email</string>
+    <string name="reg_pass_text">Enter Password Twice</string>
+    <string name="reg_button_text">Register</string>
 </resources>

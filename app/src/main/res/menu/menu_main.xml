@@ -11,4 +11,8 @@
         android:id="@+id/startMeetingButton"
         android:orderInCategory="102"
         android:title="@string/meetingButtonText" />
+    <item
+        android:id="@+id/logOutMenuBtn"
+        android:orderInCategory="103"
+        android:title="Logga ut" />
 </menu>

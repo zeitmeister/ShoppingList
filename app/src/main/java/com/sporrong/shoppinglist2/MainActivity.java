@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,7 @@ import android.widget.Toast;
 //import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -49,11 +51,15 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity{
     boolean removed = false;
 
+    private FirebaseAuth mAuth;
     private ArrayList<ShoppingItem> shoppingItems = new ArrayList<>();
     public static final String ITEMS_FIREBASE_KEY = "ItemsList";
+    public static final String TOTALSUM_FIREBASE_KEY = "totalSum";
 
+    private TotalSum totalSum = new TotalSum();
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
     DatabaseReference ref = firebaseDatabase.getReference(ITEMS_FIREBASE_KEY);
+    DatabaseReference totalSumRef = firebaseDatabase.getReference(TOTALSUM_FIREBASE_KEY);
 
     FirebaseRecyclerAdapter firebaseRecyclerAdapter;
 
@@ -77,7 +83,7 @@ public class MainActivity extends AppCompatActivity{
         itemEntry = findViewById(R.id.addItemEditText);
         totalSumTextView = findViewById(R.id.totalSumTextView);
 
-
+        mAuth = FirebaseAuth.getInstance();
         itemEntry.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -113,7 +119,6 @@ public class MainActivity extends AppCompatActivity{
                 holder.bind(model);
             }
         };
-        totalSumTextView.setText(String.valueOf(TotalSum.getTotalSum()));
         itemList.setAdapter(firebaseRecyclerAdapter);
 
         ref.addChildEventListener(new ChildEventListener() {
@@ -124,12 +129,10 @@ public class MainActivity extends AppCompatActivity{
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                totalSumTextView.setText(String.valueOf(TotalSum.getTotalSum()));
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-                totalSumTextView.setText(String.valueOf(TotalSum.getTotalSum()));
             }
 
             @Override
@@ -142,12 +145,38 @@ public class MainActivity extends AppCompatActivity{
 
             }
         });
+
+        totalSumRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Long totalSum = dataSnapshot.getValue(Long.class);
+                totalSumTextView.setText(totalSum.toString());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
     }
+
+
 
     @Override
     protected void onStart() {
         super.onStart();
         firebaseRecyclerAdapter.startListening();
+        totalSumRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Long totalSum = dataSnapshot.getValue(Long.class);
+                totalSumTextView.setText(totalSum.toString());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
@@ -179,6 +208,15 @@ public class MainActivity extends AppCompatActivity{
             startActivity(intent);
         }
 
+        if (id == R.id.logOutMenuBtn) {
+            if (mAuth.getCurrentUser() != null) {
+                mAuth.signOut();
+                Toast.makeText(MainActivity.this, "Logged Out",
+                        Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, AuthenticationActivity.class));
+            }
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -199,18 +237,20 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private boolean removeItemsFromFirebase() {
-      DatabaseReference queryRef = FirebaseDatabase.getInstance().getReference(ITEMS_FIREBASE_KEY);
-      Query boughyQuery = queryRef.orderByChild("bought").equalTo(true);
-
+      Query boughyQuery = ref.orderByChild("bought").equalTo(true);
         boughyQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                int sumToBeRemoved = 0;
                 for (DataSnapshot querySnap : dataSnapshot.getChildren()){
+                    Log.d("child: ", querySnap.toString());
+                    int price = querySnap.child("price").getValue(int.class);
+                    sumToBeRemoved += price;
                     querySnap.getRef().removeValue();
-                    if (querySnap.exists()) {
-                        
-                    }
                 }
+
+                totalSum.drawFromTotalSum(sumToBeRemoved);
+                ref.getParent().child("totalSum").setValue(totalSum.getTotalSum());
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {

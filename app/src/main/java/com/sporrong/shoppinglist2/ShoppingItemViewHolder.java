@@ -33,9 +33,8 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
     private final EditText priceTag;
     private int priceInt;
     private TotalSum totalSumObj = new TotalSum();
-    private Context context;
     public static final String ITEMS_FIREBASE_KEY = "ItemsList";
-    DatabaseReference ref = FirebaseDatabase.getInstance().getReference(ITEMS_FIREBASE_KEY);
+    private DatabaseReference ref = FirebaseDatabase.getInstance().getReference(ITEMS_FIREBASE_KEY);
 
 
     public ShoppingItemViewHolder(View view) {
@@ -44,15 +43,10 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
         boughtSwitch = view.findViewById(R.id.boughtSwitchId);
         removeButton = view.findViewById(R.id.removeButton);
         priceTag = view.findViewById(R.id.priceEditText);
-        context = view.getContext();
-
     }
 
     public void bind(final ShoppingItem shoppingItem){
         productName.setText(shoppingItem.productName);
-
-
-
         boughtSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -72,11 +66,14 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
 
         boughtSwitch.setChecked(shoppingItem.bought);
 
+        //when an item is removed, the value is drawn from the total sum variable and then updated in the database
         removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ref.child(shoppingItem.pushKey).removeValue();
                 totalSumObj.drawFromTotalSum(shoppingItem.getPrice());
+
+                ref.getParent().child("totalSum").setValue(totalSumObj.getTotalSum());
             }
         });
 
@@ -114,10 +111,24 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
 //            }
 //        });
 
-
-        priceTag.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        //If price needs to be edited, the previous price is reduced from the total sum on focus.
+        priceTag.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus){
+                    String priceString = priceTag.getText().toString();
+                    int focusPriceInt = Integer.parseInt(priceString);
+                    totalSumObj.drawFromTotalSum(focusPriceInt);
+                    ref.getParent().child("totalSum").setValue(totalSumObj.getTotalSum());
+                }
+            }
+        });
+
+        //the price of an item is added to the totalsum and firebase when user enters a number and hits enter
+        priceTag.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                        @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
                 boolean enterWasPressed = event == null
                         || (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN);
                 if (enterWasPressed) {
@@ -125,13 +136,17 @@ public class ShoppingItemViewHolder extends RecyclerView.ViewHolder {
                     if (priceString.equals("")) {
                         priceInt = 0;
                         ref.child(shoppingItem.pushKey).child("price").setValue(priceInt);
+
                         totalSumObj.addTototalSum(priceInt);
                     } else {
                         priceInt = Integer.parseInt(priceString);
                         ref.child(shoppingItem.pushKey).child("price").setValue(priceInt);
                         totalSumObj.addTototalSum(priceInt);
+                        ref.getParent().child("totalSum").setValue(totalSumObj.getTotalSum()); //add the totalSum to the totalSum-node in Firebase
+                        priceTag.clearFocus(); //To avoid 'onFocusChange' after a user enters a number we clear the focus
                     }
                     return true;
+
                 }
 
                 return false;

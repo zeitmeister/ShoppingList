@@ -6,11 +6,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -18,31 +22,38 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
+import java.text.SimpleDateFormat;
+
 public class MeetingPoints extends AppCompatActivity {
 
-    public static final String ITEMS_FIREBASE_KEY = "ItemsList";
+    public static final String MEETING_FIREBASE_LIST = "MeetingList";
 
     FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-    DatabaseReference ref = firebaseDatabase.getReference(ITEMS_FIREBASE_KEY);
+    DatabaseReference ref = firebaseDatabase.getReference(MEETING_FIREBASE_LIST);
 
     FirebaseRecyclerAdapter firebaseRecyclerAdapter;
+    String pattern = "yyyy-MM-dd";
+    SimpleDateFormat simpleDate = new SimpleDateFormat(pattern);
 
 
-
-    private RecyclerView itemList;
+    private RecyclerView meetingList;
+    private EditText meetingEntry;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem menuItem = menu.findItem(R.id.startMeetingButton);
+        menuItem.setTitle("Gå till Inköpslistan");
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_settings);
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+        if (id == R.id.remove_bought_button || id == R.id.startMeetingButton) {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -51,30 +62,45 @@ public class MeetingPoints extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_meeting_points);
 
-        itemList = findViewById(R.id.meetingList);
-        itemList.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL, false));
+        meetingEntry = findViewById(R.id.meetingEntry);
+        meetingList = findViewById(R.id.meetingList);
+        meetingList.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL, false));
 
         Query query = FirebaseDatabase.getInstance()
-                .getReference(ITEMS_FIREBASE_KEY);
+                .getReference(MEETING_FIREBASE_LIST);
+        meetingEntry.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                boolean enterWasPressed = event == null
+                        || (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN);
+                if (enterWasPressed) {
+                    pushToFirebase();
+                    return true;
+                }
 
-        FirebaseRecyclerOptions<ShoppingItem> options =
-                new FirebaseRecyclerOptions.Builder<ShoppingItem>().setQuery(query, ShoppingItem.class).build();
-        firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<ShoppingItem, ShoppingItemViewHolder>(options) {
+                return false;
+            }
+        });
+
+
+        FirebaseRecyclerOptions<Meeting> options =
+                new FirebaseRecyclerOptions.Builder<Meeting>().setQuery(query, Meeting.class).build();
+        firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Meeting, MeetingViewHolder>(options) {
 
 
             @NonNull
             @Override
-            public ShoppingItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item, parent, false);
-                return new ShoppingItemViewHolder(view);
+            public MeetingViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.meeting_point_item, parent, false);
+                return new MeetingViewHolder(view);
             }
 
             @Override
-            protected void onBindViewHolder(@NonNull ShoppingItemViewHolder holder, int position, @NonNull ShoppingItem model) {
+            protected void onBindViewHolder(@NonNull MeetingViewHolder holder, int position, @NonNull Meeting model) {
                 holder.bind(model);
             }
         };
-        itemList.setAdapter(firebaseRecyclerAdapter);
+        meetingList.setAdapter(firebaseRecyclerAdapter);
     }
 
     @Override
@@ -82,4 +108,15 @@ public class MeetingPoints extends AppCompatActivity {
         super.onStart();
         firebaseRecyclerAdapter.startListening();
     }
+    private void pushToFirebase() {
+        String enteredMeeting = meetingEntry.getText().toString();
+        Meeting meeting = new Meeting("Andra juli ", enteredMeeting);
+        meeting.setPushKey(ref.push().getKey());
+        ref.child(meeting.getPushKey()).setValue(meeting);
+        meetingEntry.setText("");
+
+    }
+
+
+
 }

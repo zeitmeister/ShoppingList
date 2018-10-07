@@ -3,7 +3,7 @@ package com.sporrong.shoppinglist2;
 public class TotalSum {
     private static int totalSum;
 
-    public static int getTotalSum() {
+    public int getTotalSum() {
         return totalSum;
     }
 
